@@ -12,6 +12,7 @@ public class Controller2D : MonoBehaviour {
 	float maxClimbAngle = 60;
 	float maxDescendAngle = 75;
 	public Vector2 playerInput;
+	private bool isJumpPressed = false;
 
 	float horizontalRaySpacing;
 	float verticalRaySpacing;
@@ -35,10 +36,15 @@ public class Controller2D : MonoBehaviour {
 	}
 
 	public void Move (Vector3 velocity, Vector2 input){
+		Move (velocity, input, false);
+	}
+
+	public void Move (Vector3 velocity, Vector2 input, bool jumpPressed){
 		UpdateRaycastOrigins ();
 		collisions.Reset ();
 		collisions.oldVelocity = velocity;
 		this.playerInput = input;
+		this.isJumpPressed = jumpPressed;
 
 		// Wall check
 		if (velocity.x != 0) {
@@ -116,6 +122,11 @@ public class Controller2D : MonoBehaviour {
 			Debug.DrawRay(rayOrigin, Vector2.right * xDir * rayLength, Color.red);
 
 			if(hit){
+
+				if(hit.collider.tag == "Pass Through"){
+					continue;
+				}
+
 				float slopeAngle = Vector2.Angle (hit.normal, Vector2.up);
 				// If climbing
 				if(i == 0 && slopeAngle <= maxClimbAngle){
@@ -162,6 +173,20 @@ public class Controller2D : MonoBehaviour {
 			Debug.DrawRay(rayOrigin, Vector2.up * yDir * rayLength, Color.red);
 
 			if(hit){
+				if(hit.collider.tag == "Pass Through"){
+					collisions.abovePassThroughPlatform = true; // used with jump down
+
+					if (yDir == 1 || hit.distance == 0){ // going up
+						continue;
+					}
+					if(playerInput.y == -1 && isJumpPressed){
+						continue;
+					}
+				}
+				else{
+					collisions.abovePassThroughPlatform = false;
+				}
+
 				velocity.y = (hit.distance - skinWidth) * yDir;
 				rayLength = hit.distance;
 
@@ -226,12 +251,14 @@ public class Controller2D : MonoBehaviour {
 		public float slopeAngle, slopeAngleOld;
 		public Vector3 oldVelocity;
 		public int facingDir;
+		public bool abovePassThroughPlatform;
 
 		public void Reset(){
 			above = below = false;
 			left = right = false;
 			climbingSlope = false;
 			descendingSlope = false;
+			abovePassThroughPlatform = false;
 
 			slopeAngleOld = slopeAngle;
 			slopeAngle = 0;

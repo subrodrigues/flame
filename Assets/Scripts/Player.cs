@@ -71,7 +71,7 @@ public class Player : MonoBehaviour {
 		JumpLogic (input, wallDirX, wallSliding);
 
 		velocity.y += gravity * Time.deltaTime;
-		controller.Move (velocity * Time.deltaTime, input);
+		controller.Move (velocity * Time.deltaTime, input, Input.GetButtonDown ("Jump"));
 	}
 
 	/*
@@ -79,7 +79,8 @@ public class Player : MonoBehaviour {
 	 */
 	void JumpLogic (Vector2 input, int wallDirX, bool wallSliding)
 	{
-		if (Input.GetButtonDown ("Jump")) {
+		if (Input.GetButtonDown ("Jump") && 
+		    (!controller.collisions.abovePassThroughPlatform || input.y != -1)) { // only jump if the user doesn't want to go down out of a platform
 			if (wallSliding) {
 				if (wallDirX == input.x) {
 					// If we are moving in same direction as wall that facing
