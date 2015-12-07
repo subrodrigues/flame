@@ -65,6 +65,7 @@ public class Player : MonoBehaviour {
 
 		if (controller.collisions.above || controller.collisions.below) {
 			velocity.y = 0;
+			playerAnimator.SetBool ("IsJumping", false);
 		}
 
 		bool wallSliding = WallSlidingLogic (input, wallDirX);
@@ -81,7 +82,11 @@ public class Player : MonoBehaviour {
 	{
 		if (Input.GetButtonDown ("Jump") && 
 		    (!controller.collisions.abovePassThroughPlatform || input.y != -1)) { // only jump if the user doesn't want to go down out of a platform
+
+			playerAnimator.SetBool ("IsJumping", true);
+
 			if (wallSliding) {
+
 				if (wallDirX == input.x) {
 					// If we are moving in same direction as wall that facing
 					velocity.x = -wallDirX * wallJumpClimb.x;

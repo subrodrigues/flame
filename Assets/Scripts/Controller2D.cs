@@ -85,6 +85,7 @@ public class Controller2D : MonoBehaviour {
 		
 		if (hit) {
 			float slopeAngle = Vector2.Angle(hit.normal, Vector2.up);
+
 			if (slopeAngle != 0 && slopeAngle <= maxDescendAngle) {
 				if (Mathf.Sign(hit.normal.x) == xDir) {
 					if (hit.distance - skinWidth <= Mathf.Tan(slopeAngle * Mathf.Deg2Rad) * Mathf.Abs(velocity.x)) {
