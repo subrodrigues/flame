@@ -12,7 +12,7 @@ public class Player : MonoBehaviour {
 	public float timeToJumpApex = 0.4f; // how long to reach highest point
 
 	public float wallSlidingSpeedMax = 3;
-	public float wallStickTime = 0.25f; // seconds
+	public float wallStickTime = 0.025f; // seconds
 	float timeToWallUnstick; 
 
 	float accelerationTimeAirborne = 0.2f;
@@ -35,7 +35,7 @@ public class Player : MonoBehaviour {
 
 		gravity = - (2 * maxJumpHeight) / Mathf.Pow (timeToJumpApex, 2); // deltaMovement = initialVelocity * time + ((acceleration * pow(time, 2)) / 2)
 		maxJumpVelocity = Mathf.Abs (gravity) * timeToJumpApex; // finalVelocity = initialVelocity + acceleration * time
-		minJumpHeight = Mathf.Sqrt (2 * Mathf.Abs (gravity) * minJumpVelocity);
+		minJumpVelocity = Mathf.Sqrt (2 * Mathf.Abs (gravity) * minJumpHeight);
 
 		print ("Gravity: " + gravity + " Jump Velocity: " + maxJumpVelocity);
 	}
@@ -43,7 +43,6 @@ public class Player : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 		Vector2 input = new Vector2 (Input.GetAxisRaw ("Horizontal"), Input.GetAxisRaw ("Vertical"));
-
 		int wallDirX = (controller.collisions.left) ? -1 : 1;
 
 		float targetVelocityX = input.x * moveSpeed;
@@ -69,9 +68,8 @@ public class Player : MonoBehaviour {
 		}
 
 		bool wallSliding = WallSlidingLogic (input, wallDirX);
-		JumpLogic (input, wallDirX, wallSliding);
 
-		velocity.y += gravity * Time.deltaTime;
+		JumpLogic (input, wallDirX, wallSliding);
 		controller.Move (velocity * Time.deltaTime, input, Input.GetButtonDown ("Jump"));
 	}
 
@@ -91,13 +89,12 @@ public class Player : MonoBehaviour {
 					// If we are moving in same direction as wall that facing
 					velocity.x = -wallDirX * wallJumpClimb.x;
 					velocity.y = wallJumpClimb.y;
-				} else
-					if (velocity.x == 0) {
-					// off the wall
+				} else if (input.x == 0) {
+					// no horizontal input: jump off the wall
 					velocity.x = -wallDirX * wallJumpOff.x;
 					velocity.y = wallJumpOff.y;
 				} else {
-					// leap
+					// horizontal input is opposite from wall: we do a leap
 					velocity.x = -wallDirX * wallLeap.x;
 					velocity.y = wallLeap.y;
 				}
@@ -110,16 +107,20 @@ public class Player : MonoBehaviour {
 			if(velocity.y > minJumpVelocity)
 				velocity.y = minJumpVelocity;
 		}
+
+	//	print ("vel y: " + velocity.y + " - " + minJumpVelocity);
+		velocity.y += gravity * Time.deltaTime;
 	}
 
 	/*
-	 * Method that deald with Wall Sliding Logic. 
-	 * Updates velocity Vector and deals with Leap and Stick/Unstick wall jumping
+	 * Method that deals with Wall Sliding Logic. 
+	 * Updates velocity Vector and deals with Stick/Unstick wall jumping leap
 	 */
 	bool WallSlidingLogic (Vector2 input, int wallDirX)
 	{
 		bool wallSliding = false;
-		if ((controller.collisions.left || controller.collisions.right) && !controller.collisions.below && velocity.y < 0) {
+		if ((controller.collisions.left || controller.collisions.right) && 
+				!controller.collisions.below && velocity.y < 0) {
 			wallSliding = true;
 			if (velocity.y < -wallSlidingSpeedMax) {
 				velocity.y = -wallSlidingSpeedMax;
