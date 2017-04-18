@@ -166,18 +166,21 @@ public class Controller2D : RaycastController {
 			Debug.DrawRay(rayOrigin, Vector2.up * yDir * rayLength, Color.red);
 
 			if(hit){
-				if(hit.collider.tag == "Pass Through"){
-					if (yDir == 1 || hit.distance == 0){ // going up
+				if (hit.collider.tag == "Pass Through") {
+					collisions.abovePassThroughPlatform = true;
+					if (yDir == 1 || hit.distance == 0) { // going up
 						continue;
 					}
 					if (collisions.fallingThroughPlatform) {
 						continue;
 					}
-					if(playerInput.y == -1 && isJumpPressed){
-						collisions.fallingThroughPlatform  = true; // used with jump down
-						Invoke("ResetFallingThroughPlatform",.5f);
+					if (playerInput.y == -1 && isJumpPressed) {
+						collisions.fallingThroughPlatform = true; // used with jump down
+						Invoke ("ResetFallingThroughPlatform", .5f);
 						continue;
 					}
+				} else {
+					collisions.abovePassThroughPlatform = false;
 				}
 
 				velocity.y = (hit.distance - skinWidth) * yDir;
@@ -219,7 +222,8 @@ public class Controller2D : RaycastController {
 		public float slopeAngle, slopeAngleOld;
 		public Vector3 oldVelocity;
 		public int facingDir;
-		public bool fallingThroughPlatform ;
+		public bool abovePassThroughPlatform;
+		public bool fallingThroughPlatform;
 
 		public void Reset(){
 			above = below = false;
@@ -227,6 +231,7 @@ public class Controller2D : RaycastController {
 			climbingSlope = false;
 			descendingSlope = false;
 			fallingThroughPlatform  = false;
+			abovePassThroughPlatform = false;
 
 			slopeAngleOld = slopeAngle;
 			slopeAngle = 0;

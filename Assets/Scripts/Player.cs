@@ -79,7 +79,7 @@ public class Player : MonoBehaviour {
 	void JumpLogic (Vector2 input, int wallDirX, bool wallSliding)
 	{
 		if (Input.GetButtonDown ("Jump") && 
-			(!controller.collisions.fallingThroughPlatform || input.y != -1)) { // only jump if the user doesn't want to go down out of a platform
+			(!controller.collisions.abovePassThroughPlatform || input.y != -1)) { // only jump if the user doesn't want to go down out of a platform
 
 			playerAnimator.SetBool ("IsJumping", true);
 
