@@ -1,45 +1,35 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-[RequireComponent (typeof (BoxCollider2D))]
-public class Controller2D : MonoBehaviour {
-
-	public LayerMask collisionMask;
-
-	const float skinWidth = .015f;
-	public int horizontalRayCount = 4;
-	public int verticalRayCount = 4;
-	float maxClimbAngle = 60;
-	float maxDescendAngle = 75;
+public class Controller2D : RaycastController {
+	
 	public Vector2 playerInput;
 	private bool isJumpPressed = false;
 
-	float horizontalRaySpacing;
-	float verticalRaySpacing;
-
-	[HideInInspector]
-	public BoxCollider2D collider;
-	RaycastOrigins raycastOrigins;
+	float maxClimbAngle = 60;
+	float maxDescendAngle = 75;
 
 	public CollisionInfo collisions;
 
 	// Use this for initialization
 	public virtual void Awake () {
-		collider = GetComponent<BoxCollider2D> ();
+		collider = GetComponent<BoxCollider2D> ();	// Camera needs this to be initialized at Awake
 	}
-	
-	// Update is called once per frame
-	public virtual void Start() {
-		CalculateRaySpacing ();
 
+	public override void Start(){
+		base.Start ();
 		collisions.facingDir = 1;
+	}
+
+	public void Move (Vector3 velocity, bool standingOnPlatform = false){
+		Move (velocity, new Vector3(), false, standingOnPlatform);
 	}
 
 	public void Move (Vector3 velocity, Vector2 input){
 		Move (velocity, input, false);
 	}
 
-	public void Move (Vector3 velocity, Vector2 input, bool jumpPressed){
+	public void Move (Vector3 velocity, Vector2 input, bool jumpPressed, bool standingOnPlatform = false){
 		UpdateRaycastOrigins ();
 		collisions.Reset ();
 		collisions.oldVelocity = velocity;
@@ -55,14 +45,16 @@ public class Controller2D : MonoBehaviour {
 			DescendSlope(ref velocity);
 		}
 
-	//	if (velocity.x != 0) {
-			HorizontalCollisions (ref velocity);
-	//	}
+		HorizontalCollisions (ref velocity);
 		if (velocity.y != 0) {
 			VerticalCollisions (ref velocity);
 		}
 
 		transform.Translate (velocity);
+
+		if (standingOnPlatform) {
+			collisions.below = true;
+		}
 	}
 
 	void ClimbSlope (ref Vector3 velocity, float slopeAngle){
@@ -116,7 +108,7 @@ public class Controller2D : MonoBehaviour {
 		}
 
 		for (int i = 0; i < horizontalRayCount; i++) {
-			Vector2 rayOrigin = (xDir == -1)?raycastOrigins.bottomLeft:raycastOrigins.bottomRight;
+			Vector2 rayOrigin = (xDir == -1) ? raycastOrigins.bottomLeft:raycastOrigins.bottomRight;
 			rayOrigin += Vector2.up * (horizontalRaySpacing * i);
 			RaycastHit2D hit = Physics2D.Raycast(rayOrigin, Vector2.right * xDir, rayLength, collisionMask);
 
@@ -124,7 +116,7 @@ public class Controller2D : MonoBehaviour {
 
 			if(hit){
 
-				if(hit.collider.tag == "Pass Through"){
+				if(hit.distance == 0 || hit.collider.tag == "Pass Through"){
 					continue;
 				}
 
@@ -175,17 +167,17 @@ public class Controller2D : MonoBehaviour {
 
 			if(hit){
 				if(hit.collider.tag == "Pass Through"){
-					collisions.abovePassThroughPlatform = true; // used with jump down
-
 					if (yDir == 1 || hit.distance == 0){ // going up
 						continue;
 					}
-					if(playerInput.y == -1 && isJumpPressed){
+					if (collisions.fallingThroughPlatform) {
 						continue;
 					}
-				}
-				else{
-					collisions.abovePassThroughPlatform = false;
+					if(playerInput.y == -1 && isJumpPressed){
+						collisions.fallingThroughPlatform  = true; // used with jump down
+						Invoke("ResetFallingThroughPlatform",.5f);
+						continue;
+					}
 				}
 
 				velocity.y = (hit.distance - skinWidth) * yDir;
@@ -216,33 +208,8 @@ public class Controller2D : MonoBehaviour {
 		}
 	}
 
-	void UpdateRaycastOrigins(){
-		Bounds bounds = collider.bounds;
-		bounds.Expand (skinWidth * -2);
-
-		raycastOrigins.bottomLeft = new Vector2 (bounds.min.x, bounds.min.y);
-		raycastOrigins.bottomRight = new Vector2 (bounds.max.x, bounds.min.y);
-		raycastOrigins.topLeft = new Vector2 (bounds.min.x, bounds.max.y);
-		raycastOrigins.topRight = new Vector2 (bounds.max.x, bounds.max.y);
-
-	}
-
-	void CalculateRaySpacing(){
-		Bounds bounds = collider.bounds;
-		bounds.Expand (skinWidth * -2);
-
-		horizontalRayCount = Mathf.Clamp (horizontalRayCount, 2, int.MaxValue);
-		horizontalRayCount = Mathf.Clamp (horizontalRayCount, 2, int.MaxValue);
-
-		horizontalRaySpacing = bounds.size.y / (horizontalRayCount - 1);
-		verticalRaySpacing = bounds.size.x / (verticalRayCount - 1);
-		
-	}
-
-	struct RaycastOrigins{
-		public Vector2 topLeft, topRight;
-		public Vector2 bottomLeft, bottomRight;
-
+	void ResetFallingThroughPlatform() {
+		collisions.fallingThroughPlatform = false;
 	}
 
 	public struct CollisionInfo{
@@ -252,14 +219,14 @@ public class Controller2D : MonoBehaviour {
 		public float slopeAngle, slopeAngleOld;
 		public Vector3 oldVelocity;
 		public int facingDir;
-		public bool abovePassThroughPlatform;
+		public bool fallingThroughPlatform ;
 
 		public void Reset(){
 			above = below = false;
 			left = right = false;
 			climbingSlope = false;
 			descendingSlope = false;
-			abovePassThroughPlatform = false;
+			fallingThroughPlatform  = false;
 
 			slopeAngleOld = slopeAngle;
 			slopeAngle = 0;
