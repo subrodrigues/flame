@@ -36,13 +36,13 @@ public class Controller2D : RaycastController {
 		this.playerInput = input;
 		this.isJumpPressed = jumpPressed;
 
+		if (velocity.y < 0) {
+			DescendSlope(ref velocity);
+		}
+
 		// Wall check
 		if (velocity.x != 0) {
 			collisions.facingDir = (int) Mathf.Sign(velocity.x);
-		}
-
-		if (velocity.y < 0) {
-			DescendSlope(ref velocity);
 		}
 
 		HorizontalCollisions (ref velocity);
@@ -112,7 +112,7 @@ public class Controller2D : RaycastController {
 			rayOrigin += Vector2.up * (horizontalRaySpacing * i);
 			RaycastHit2D hit = Physics2D.Raycast(rayOrigin, Vector2.right * xDir, rayLength, collisionMask);
 
-			Debug.DrawRay(rayOrigin, Vector2.right * xDir * rayLength, Color.red);
+			Debug.DrawRay(rayOrigin, Vector2.right * xDir, Color.red);
 
 			if(hit){
 
@@ -168,6 +168,7 @@ public class Controller2D : RaycastController {
 			if(hit){
 				if (hit.collider.tag == "Pass Through") {
 					collisions.abovePassThroughPlatform = true;
+
 					if (yDir == 1 || hit.distance == 0) { // going up
 						continue;
 					}
@@ -175,6 +176,7 @@ public class Controller2D : RaycastController {
 						continue;
 					}
 					if (playerInput.y == -1 && isJumpPressed) {
+						collisions.abovePassThroughPlatform = false;
 						collisions.fallingThroughPlatform = true; // used with jump down
 						Invoke ("ResetFallingThroughPlatform", .5f);
 						continue;
@@ -230,8 +232,6 @@ public class Controller2D : RaycastController {
 			left = right = false;
 			climbingSlope = false;
 			descendingSlope = false;
-			fallingThroughPlatform  = false;
-			abovePassThroughPlatform = false;
 
 			slopeAngleOld = slopeAngle;
 			slopeAngle = 0;

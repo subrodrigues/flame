@@ -8,8 +8,12 @@ public class RaycastController : MonoBehaviour {
 	public LayerMask collisionMask;
 
 	public const float skinWidth = .015f;
+	[HideInInspector]
 	public int horizontalRayCount = 4;
+	[HideInInspector]
 	public int verticalRayCount = 4;
+	[HideInInspector]
+	public float dstBetweenRays = 0.25f;
 
 	[HideInInspector]
 	public float horizontalRaySpacing;
@@ -40,12 +44,14 @@ public class RaycastController : MonoBehaviour {
 		Bounds bounds = collider.bounds;
 		bounds.Expand (skinWidth * -2);
 
-		horizontalRayCount = Mathf.Clamp (horizontalRayCount, 2, int.MaxValue);
-		horizontalRayCount = Mathf.Clamp (horizontalRayCount, 2, int.MaxValue);
+		float boundsWidth = bounds.size.x;
+		float boundsHeight = bounds.size.y;
+
+		horizontalRayCount = Mathf.RoundToInt (boundsHeight / dstBetweenRays);
+		verticalRayCount = Mathf.RoundToInt (boundsWidth / dstBetweenRays);
 
 		horizontalRaySpacing = bounds.size.y / (horizontalRayCount - 1);
 		verticalRaySpacing = bounds.size.x / (verticalRayCount - 1);
-
 	}
 
 	public struct RaycastOrigins{
