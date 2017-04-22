@@ -75,8 +75,12 @@ public class Controller2D : RaycastController {
 
 		RaycastHit2D maxSlopeHitLeft = Physics2D.Raycast(raycastOrigins.bottomLeft, Vector2.down, Mathf.Abs(deltaMove.y) + skinWidth, collisionMask);
 		RaycastHit2D maxSlopeHitRight = Physics2D.Raycast(raycastOrigins.bottomRight, Vector2.down, Mathf.Abs(deltaMove.y) + skinWidth, collisionMask);
-		SlideDownMaxSlope (maxSlopeHitLeft, ref deltaMove);
-		SlideDownMaxSlope (maxSlopeHitRight, ref deltaMove);
+
+		// We need only one to be detected in order to avoid twitching when just a corner is hitting the slope
+		if (maxSlopeHitLeft ^ maxSlopeHitRight) {
+			SlideDownMaxSlope (maxSlopeHitLeft, ref deltaMove);
+			SlideDownMaxSlope (maxSlopeHitRight, ref deltaMove);
+		}
 
 		if (!collisions.slidingDownMaxSlope) {
 			float xDir = Mathf.Sign (deltaMove.x);
@@ -159,7 +163,7 @@ public class Controller2D : RaycastController {
 						deltaMove.x -= distanceToSlopStart * xDir;
 					}
 					ClimbSlope(ref deltaMove, slopeAngle, hit.normal);
-					print(slopeAngle);
+					//print(slopeAngle);
 
 					deltaMove.x += distanceToSlopStart * xDir;
 				}
