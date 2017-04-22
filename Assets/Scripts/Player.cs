@@ -41,18 +41,20 @@ public class Player : MonoBehaviour {
 		maxJumpVelocity = Mathf.Abs (gravity) * timeToJumpApex; // finalVelocity = initialVelocity + acceleration * time
 		minJumpVelocity = Mathf.Sqrt (2 * Mathf.Abs (gravity) * minJumpHeight);
 
-		print ("Gravity: " + gravity + " Jump Velocity: " + maxJumpVelocity);
+	//	print ("Gravity: " + gravity + " Jump Velocity: " + maxJumpVelocity);
 	}
 	
 	void Update () {
-		
+		float targetVelocityX = directionalInput.x * moveSpeed;
+		velocity.x = Mathf.SmoothDamp (velocity.x, targetVelocityX, ref velocityXSmoothing, (controller.collisions.below) ? accelerationTimeGrounded : accelerationTimeAirborne);
+
 		SetAnimatorState ();
 
 		int wallDirX = (controller.collisions.left) ? -1 : 1;
 		bool wallSliding = WallSlidingLogic (directionalInput, wallDirX);
 		JumpLogic (directionalInput, wallDirX, wallSliding);
 
-		CalculateVelocity ();
+		velocity.y += gravity * Time.deltaTime;
 
 		controller.Move (velocity * Time.deltaTime, directionalInput, isJumpInputDownPressed);
 	}
@@ -76,8 +78,18 @@ public class Player : MonoBehaviour {
 			playerAnimator.SetBool ("IsMoving", false);
 		}
 		if (controller.collisions.above || controller.collisions.below) {
-			velocity.y = 0;
 			playerAnimator.SetBool ("IsJumping", false);
+
+			UpdateVelocityYOnSuddenTopBottomCollision ();
+		}
+	}
+
+	void UpdateVelocityYOnSuddenTopBottomCollision (){
+		if (controller.collisions.slidingDownMaxSlope) {
+			velocity.y += controller.collisions.slopeNormal.y * -gravity * Time.deltaTime;
+		}
+		else {
+			velocity.y = 0;
 		}
 	}
 
