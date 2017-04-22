@@ -29,7 +29,11 @@ public class Player : MonoBehaviour {
 
 	public Animator playerAnimator;
 
-	// Use this for initialization
+	/** Jump Logic Variables */
+	public Vector2 directionalInput;
+	public bool isJumpInputDownPressed;
+	public bool isJumpInputUpPressed;
+
 	void Start () {
 		controller = GetComponent<Controller2D> ();
 
@@ -40,45 +44,66 @@ public class Player : MonoBehaviour {
 		print ("Gravity: " + gravity + " Jump Velocity: " + maxJumpVelocity);
 	}
 	
-	// Update is called once per frame
 	void Update () {
-		Vector2 input = new Vector2 (Input.GetAxisRaw ("Horizontal"), Input.GetAxisRaw ("Vertical"));
+		
+		SetAnimatorState ();
+
 		int wallDirX = (controller.collisions.left) ? -1 : 1;
+		bool wallSliding = WallSlidingLogic (directionalInput, wallDirX);
+		JumpLogic (directionalInput, wallDirX, wallSliding);
 
-		float targetVelocityX = input.x * moveSpeed;
-		velocity.x = Mathf.SmoothDamp (velocity.x, targetVelocityX, ref velocityXSmoothing, (controller.collisions.below) ? accelerationTimeGrounded : accelerationTimeAirborne);
+		CalculateVelocity ();
 
-		// Player Animator 
-		if (input.x != 0) {
+		controller.Move (velocity * Time.deltaTime, directionalInput, isJumpInputDownPressed);
+	}
+
+	/**
+	 * Set the proper Animator state in order to play the correct Animation
+	 * */
+	void SetAnimatorState () {
+		if (directionalInput.x != 0) {
 			playerAnimator.SetBool ("IsMoving", true);
-
-			if(input.x > 0){ // Moving Right
-				playerAnimator.transform.localScale = new Vector3(1, 1, 1);
+			if (directionalInput.x > 0) {
+				// Moving Right
+				playerAnimator.transform.localScale = new Vector3 (1, 1, 1);
 			}
-			else{ // Moving Left
-				playerAnimator.transform.localScale = new Vector3(-1, 1, 1);
+			else {
+				// Moving Left
+				playerAnimator.transform.localScale = new Vector3 (-1, 1, 1);
 			}
-		} else {
+		}
+		else {
 			playerAnimator.SetBool ("IsMoving", false);
 		}
-
 		if (controller.collisions.above || controller.collisions.below) {
 			velocity.y = 0;
 			playerAnimator.SetBool ("IsJumping", false);
 		}
-
-		bool wallSliding = WallSlidingLogic (input, wallDirX);
-
-		JumpLogic (input, wallDirX, wallSliding);
-		controller.Move (velocity * Time.deltaTime, input, Input.GetButtonDown ("Jump"));
 	}
 
-	/*
-	 * Method that deald with Jump Logic and updates velocity Vector
-	 */
-	void JumpLogic (Vector2 input, int wallDirX, bool wallSliding)
-	{
-		if (Input.GetButtonDown ("Jump") && 
+	void CalculateVelocity (){
+		float targetVelocityX = directionalInput.x * moveSpeed;
+		velocity.x = Mathf.SmoothDamp (velocity.x, targetVelocityX, ref velocityXSmoothing, (controller.collisions.below) ? accelerationTimeGrounded : accelerationTimeAirborne);
+		velocity.y += gravity * Time.deltaTime;
+	}
+
+	public void SetDirectionalInput(Vector2 input){
+		directionalInput = input;
+	}
+
+	public void OnJumpInputDown(bool isPressed) {
+		isJumpInputDownPressed = isPressed;
+	}
+
+	public void OnJumpInputUp(bool isPressed){
+		isJumpInputUpPressed = isPressed;
+	}
+
+	/** 
+	 * Method that deals with Jump Logic 
+	*/
+	void JumpLogic (Vector2 input, int wallDirX, bool wallSliding){
+		if (isJumpInputDownPressed && 
 			(!controller.collisions.abovePassThroughPlatform || input.y != -1)) { // only jump if the user doesn't want to go down out of a platform
 
 			playerAnimator.SetBool ("IsJumping", true);
@@ -103,21 +128,19 @@ public class Player : MonoBehaviour {
 				velocity.y = maxJumpVelocity;
 			}
 		}
-		if (Input.GetButtonUp ("Jump")) {
+		if (isJumpInputUpPressed) {
 			if(velocity.y > minJumpVelocity)
 				velocity.y = minJumpVelocity;
 		}
 
 	//	print ("vel y: " + velocity.y + " - " + minJumpVelocity);
-		velocity.y += gravity * Time.deltaTime;
 	}
 
 	/*
 	 * Method that deals with Wall Sliding Logic. 
 	 * Updates velocity Vector and deals with Stick/Unstick wall jumping leap
 	 */
-	bool WallSlidingLogic (Vector2 input, int wallDirX)
-	{
+	bool WallSlidingLogic (Vector2 input, int wallDirX) {
 		bool wallSliding = false;
 		if ((controller.collisions.left || controller.collisions.right) && 
 				!controller.collisions.below && velocity.y < 0) {

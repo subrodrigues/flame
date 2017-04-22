@@ -9,9 +9,9 @@ public class RaycastController : MonoBehaviour {
 
 	public const float skinWidth = .015f;
 	[HideInInspector]
-	public int horizontalRayCount = 4;
+	public int horizontalRayCount;
 	[HideInInspector]
-	public int verticalRayCount = 4;
+	public int verticalRayCount;
 	[HideInInspector]
 	public float dstBetweenRays = 0.25f;
 
