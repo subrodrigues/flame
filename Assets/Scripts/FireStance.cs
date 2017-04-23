@@ -6,6 +6,7 @@ public class FireStance : MonoBehaviour {
 	
 	Player player;
 	public GameObject fireProjectionArrowPrefab;
+	public const float FIRE_PROJECTILE_TIME_TO_LIVE = 0.3f; // In seconds
 
 	private bool isInShootingProjectileMode = false;
 	GameObject fireProjectionArrowInstance = null;
@@ -14,7 +15,10 @@ public class FireStance : MonoBehaviour {
 		player = transform.parent.GetComponent<Player> ();
 	}
 
-	public void EnableFireArrowInstance(bool isToShow){
+	public bool EnableFireArrowInstance(bool isToShow){
+		if (IsInShootingProjectileMode () || !player.HasAGrip())
+			return false;
+		
 		if (isToShow) {
 			fireProjectionArrowInstance = (GameObject) Instantiate (fireProjectionArrowPrefab, transform.position, Quaternion.identity);
 			fireProjectionArrowInstance.transform.parent = transform;
@@ -24,19 +28,24 @@ public class FireStance : MonoBehaviour {
 			Destroy (fireProjectionArrowInstance);
 			GetComponent<Renderer> ().enabled = true;
 		}
+
+		return true;
 	}
 
 	public void UpdateFireArrowDirection(float angle){
-		if (fireProjectionArrowInstance == null)
-			EnableFireArrowInstance (true);
+		if (fireProjectionArrowInstance == null) {
+			if (!EnableFireArrowInstance (true))
+				return;
+		}
 
 		fireProjectionArrowInstance.transform.rotation = Quaternion.Euler (0, 0, angle);
 	}
 
 	public void UpdateFireProjectionStance(bool isToEnter){
-		if (isToEnter && 
-			(!GetComponent<Renderer> ().enabled && fireProjectionArrowInstance == null)) {
-
+		if (IsInShootingProjectileMode () || !player.HasAGrip())
+			return;
+		
+		if (isToEnter && !GetComponent<Renderer> ().enabled && fireProjectionArrowInstance == null ) {
 			player.resetDirectionalInput ();
 			player.showPlayerRenderer(false);
 			GetComponent<Renderer> ().enabled = true;
@@ -45,11 +54,13 @@ public class FireStance : MonoBehaviour {
 				isInShootingProjectileMode = true;
 				fireProjectionArrowInstance.GetComponent<FireProjectionInstance> ().ShootProjectile ();
 
-				Invoke ("ExitFireProjectionStance", 0.4f);
+				Invoke ("ExitFireProjectionStance", FIRE_PROJECTILE_TIME_TO_LIVE);
 			} else {
 				ExitFireProjectionStance ();
 			}
 		}
+	//	print ("MEH Fire Stance");
+
 	}
 
 	void ExitFireProjectionStance (){
@@ -65,5 +76,9 @@ public class FireStance : MonoBehaviour {
 
 	public bool IsInShootingProjectileMode(){
 		return isInShootingProjectileMode;
+	}
+
+	public void updatePosition(Vector2 updatedPos){
+		player.updatePosition (updatedPos);
 	}
 }

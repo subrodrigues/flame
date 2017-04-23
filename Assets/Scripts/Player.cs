@@ -159,6 +159,10 @@ public class Player : MonoBehaviour {
 	//	print ("vel y: " + velocity.y + " - " + minJumpVelocity);
 	}
 
+	public bool HasAGrip(){
+		return controller.collisions.below && !controller.collisions.slidingDownMaxSlope;
+	}
+
 	/*
 	 * Method that deals with Wall Sliding Logic. 
 	 * Updates velocity Vector and deals with Stick/Unstick wall jumping leap
@@ -198,5 +202,9 @@ public class Player : MonoBehaviour {
 		
 		if (!isToShow && playerRenderer.enabled)
 			playerRenderer.enabled = false;	
+	}
+
+	public void updatePosition(Vector2 updatedPos){
+		transform.position = updatedPos;
 	}
 }

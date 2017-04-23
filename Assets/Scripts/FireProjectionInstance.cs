@@ -4,8 +4,12 @@ using UnityEngine;
 
 public class FireProjectionInstance : MonoBehaviour {
 	public float projectionSpeed = 0.66f;
-	public int fireRange = 20;
 	public bool isShooting = false;
+	FireStance mFireStance;
+
+	void Start () {
+		mFireStance = transform.parent.GetComponent<FireStance> ();
+	}
 
 	public void ShootProjectile(){
 		if (!isShooting) {
@@ -21,9 +25,13 @@ public class FireProjectionInstance : MonoBehaviour {
 
 	void Update () {
 		if (isShooting) {
-			transform.localPosition = Vector2.Lerp (transform.localPosition, 
-				transform.right * 35f,
+			Vector2 newPosition = Vector2.Lerp (transform.localPosition, 
+				transform.right * 5f,
 				Time.deltaTime * projectionSpeed);
+			
+			transform.localPosition = newPosition;
+			mFireStance.updatePosition (transform.position);
+
 		}
 	}
 }
