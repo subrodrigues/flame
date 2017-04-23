@@ -4,17 +4,26 @@ using UnityEngine;
 
 public class FireProjectionInstance : MonoBehaviour {
 	public float projectionSpeed = 0.66f;
-	public int fireRange = 30;
+	public int fireRange = 20;
+	public bool isShooting = false;
 
-	// Use this for initialization
-	void Start () {
+	public void ShootProjectile(){
+		if (!isShooting) {
+			isShooting = true;
+		}
 	}
-	
-	// Update is called once per frame
+
+	public void destroySelf(){
+		if (!isShooting) {
+			Destroy (this);
+		}
+	}
+
 	void Update () {
-		//transform.Translate(Vector3.right * 5 * Time.deltaTime); 
-		transform.localPosition = Vector3.Lerp (transform.localPosition, 
-			new Vector3 (transform.localPosition.x + fireRange, transform.localPosition.y, transform.localPosition.z),
-			Time.deltaTime * projectionSpeed);
+		if (isShooting) {
+			transform.localPosition = Vector2.Lerp (transform.localPosition, 
+				transform.right * 35f,
+				Time.deltaTime * projectionSpeed);
+		}
 	}
 }

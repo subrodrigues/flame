@@ -27,9 +27,12 @@ public class Player : MonoBehaviour {
 
 	Controller2D controller;
 
+	/** Caleo GameObject components */
 	public Animator playerAnimator;
+	public SpriteRenderer playerRenderer;
+	public FireStance fireStance;
 
-	/** Jump Logic Variables */
+	/** PlayerInput move logic variables */
 	public Vector2 directionalInput;
 	public bool isJumpInputDownPressed;
 	public bool isJumpInputUpPressed;
@@ -40,23 +43,33 @@ public class Player : MonoBehaviour {
 		gravity = - (2 * maxJumpHeight) / Mathf.Pow (timeToJumpApex, 2); // deltaMovement = initialVelocity * time + ((acceleration * pow(time, 2)) / 2)
 		maxJumpVelocity = Mathf.Abs (gravity) * timeToJumpApex; // finalVelocity = initialVelocity + acceleration * time
 		minJumpVelocity = Mathf.Sqrt (2 * Mathf.Abs (gravity) * minJumpHeight);
-
-	//	print ("Gravity: " + gravity + " Jump Velocity: " + maxJumpVelocity);
 	}
-	
+		
+	public void SetDirectionalInput(Vector2 input){
+		directionalInput = input;
+	}
+
 	void Update () {
-		float targetVelocityX = directionalInput.x * moveSpeed;
-		velocity.x = Mathf.SmoothDamp (velocity.x, targetVelocityX, ref velocityXSmoothing, (controller.collisions.below) ? accelerationTimeGrounded : accelerationTimeAirborne);
+		// Update Caleo data when not in Shooting Projectile Stance
+		if (!fireStance.IsInShootingProjectileMode()) {
+			
+			float targetVelocityX = directionalInput.x * moveSpeed;
+			velocity.x = Mathf.SmoothDamp (velocity.x, targetVelocityX, ref velocityXSmoothing, (controller.collisions.below) ? accelerationTimeGrounded : accelerationTimeAirborne);
 
-		SetAnimatorState ();
+			SetAnimatorState ();
 
-		int wallDirX = (controller.collisions.left) ? -1 : 1;
-		bool wallSliding = WallSlidingLogic (directionalInput, wallDirX);
-		JumpLogic (directionalInput, wallDirX, wallSliding);
+			int wallDirX = (controller.collisions.left) ? -1 : 1;
+			bool wallSliding = WallSlidingLogic (directionalInput, wallDirX);
+			JumpLogic (directionalInput, wallDirX, wallSliding);
 
-		velocity.y += gravity * Time.deltaTime;
+			velocity.y += gravity * Time.deltaTime;
 
-		controller.Move (velocity * Time.deltaTime, directionalInput, isJumpInputDownPressed);
+			controller.Move (velocity * Time.deltaTime, directionalInput, isJumpInputDownPressed);
+		}
+	}
+
+	public FireStance GetFireStance(){
+		return fireStance;
 	}
 
 	/**
@@ -91,16 +104,6 @@ public class Player : MonoBehaviour {
 		else {
 			velocity.y = 0;
 		}
-	}
-
-	void CalculateVelocity (){
-		float targetVelocityX = directionalInput.x * moveSpeed;
-		velocity.x = Mathf.SmoothDamp (velocity.x, targetVelocityX, ref velocityXSmoothing, (controller.collisions.below) ? accelerationTimeGrounded : accelerationTimeAirborne);
-		velocity.y += gravity * Time.deltaTime;
-	}
-
-	public void SetDirectionalInput(Vector2 input){
-		directionalInput = input;
 	}
 
 	public void OnJumpInputDown(bool isPressed) {
@@ -183,5 +186,17 @@ public class Player : MonoBehaviour {
 			}
 		}
 		return wallSliding;
+	}
+
+	public void resetDirectionalInput(){
+		directionalInput = new Vector2 (0, 0);
+	}
+
+	public void showPlayerRenderer(bool isToShow){
+		if (isToShow && !playerRenderer.enabled)
+			playerRenderer.enabled = true;
+		
+		if (!isToShow && playerRenderer.enabled)
+			playerRenderer.enabled = false;	
 	}
 }
