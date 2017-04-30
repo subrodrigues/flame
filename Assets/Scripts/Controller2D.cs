@@ -144,7 +144,7 @@ public class Controller2D : RaycastController {
 
 			if(hit){
 
-				if(hit.distance == 0 || hit.collider.tag == "Pass Through"){
+				if(hit.distance == 0 || hit.collider.tag == "Pass Through" || hit.collider.tag == "Enemy Collider"){
 					continue;
 				}
 
@@ -194,6 +194,9 @@ public class Controller2D : RaycastController {
 			Debug.DrawRay(rayOrigin, Vector2.up * yDir, Color.red);
 
 			if(hit){
+				if (hit.collider.tag == "Enemy Collider")
+					continue;
+				
 				if (hit.collider.tag == "Pass Through") {
 					collisions.abovePassThroughPlatform = true;
 

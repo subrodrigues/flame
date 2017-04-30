@@ -22,7 +22,7 @@ public class Player : MonoBehaviour {
 	float gravity;
 	float maxJumpVelocity;	
 	float minJumpVelocity;	
-	Vector3 velocity;
+	public Vector3 velocity;
 	float velocityXSmoothing;
 
 	Controller2D controller;
