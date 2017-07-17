@@ -72,7 +72,7 @@ public class LandEnemyController2D : RaycastController {
 			Debug.DrawRay(rayOrigin, Vector2.right * xDir, Color.red);
 
 			if (hit) {
-				Debug.Log ("D" + hit.distance);
+		//		Debug.Log ("D" + hit.distance);
 				if (hit.distance == 0.0f || hit.collider.tag == "Pass Through") {
 					continue;
 				} else {
