@@ -78,7 +78,7 @@ public class FireStance : MonoBehaviour {
 		return isInShootingProjectileMode;
 	}
 
-	public void updatePosition(Vector2 updatedPos){
-		player.updatePosition (updatedPos);
+	public void fireProjectionUpdatedPosition(Vector2 updatedPos){
+		player.fireProjectionUpdatedPosition (updatedPos);
 	}
 }

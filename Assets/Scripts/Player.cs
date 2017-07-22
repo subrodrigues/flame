@@ -204,7 +204,7 @@ public class Player : MonoBehaviour {
 			playerRenderer.enabled = false;	
 	}
 
-	public void updatePosition(Vector2 updatedPos){
-		transform.position = updatedPos;
+	public void fireProjectionUpdatedPosition(Vector2 updatedPos){
+		controller.Move (updatedPos, false);
 	}
 }
