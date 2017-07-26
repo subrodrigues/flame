@@ -78,13 +78,18 @@ public class Player : MonoBehaviour {
 	void SetAnimatorState () {
 		if (directionalInput.x != 0) {
 			playerAnimator.SetBool ("IsMoving", true);
+			float newX = 0;
+
 			if (directionalInput.x > 0) {
 				// Moving Right
-				playerAnimator.transform.localScale = new Vector3 (1, 1, 1);
-			}
-			else {
+				newX = playerAnimator.transform.localScale.x < 0 ? playerAnimator.transform.localScale.x * -1 : 0;
+			} else {
 				// Moving Left
-				playerAnimator.transform.localScale = new Vector3 (-1, 1, 1);
+				newX = playerAnimator.transform.localScale.x > 0 ? playerAnimator.transform.localScale.x * -1 : 0;
+			}
+
+			if (newX != 0) {
+				playerAnimator.transform.localScale = new Vector3 (newX, playerAnimator.transform.localScale.y, playerAnimator.transform.localScale.z);
 			}
 		}
 		else {
@@ -204,6 +209,9 @@ public class Player : MonoBehaviour {
 			playerRenderer.enabled = false;	
 	}
 
+	/**
+	 * Method that controls player movement from fire projection state
+	 **/
 	public void fireProjectionUpdatedPosition(Vector2 updatedPos){
 		controller.Move (updatedPos, false);
 	}
