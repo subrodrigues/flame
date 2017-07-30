@@ -30,6 +30,7 @@ public class Player : MonoBehaviour {
 	/** Caleo GameObject components */
 	public Animator playerAnimator;
 	public SpriteRenderer playerRenderer;
+	private float rendererRotation = 0f;
 	public FireStance fireStance;
 
 	/** PlayerInput move logic variables */
@@ -50,13 +51,14 @@ public class Player : MonoBehaviour {
 	}
 
 	void Update () {
+
 		// Update Caleo data when not in Shooting Projectile Stance
 		if (!fireStance.IsInShootingProjectileMode()) {
 			
 			float targetVelocityX = directionalInput.x * moveSpeed;
 			velocity.x = Mathf.SmoothDamp (velocity.x, targetVelocityX, ref velocityXSmoothing, (controller.collisions.below) ? accelerationTimeGrounded : accelerationTimeAirborne);
 
-			SetAnimatorState ();
+			UpdateCaleoRenderer ();
 
 			int wallDirX = (controller.collisions.left) ? -1 : 1;
 			bool wallSliding = WallSlidingLogic (directionalInput, wallDirX);
@@ -75,7 +77,28 @@ public class Player : MonoBehaviour {
 	/**
 	 * Set the proper Animator state in order to play the correct Animation
 	 * */
-	void SetAnimatorState () {
+	void UpdateCaleoRenderer () {
+
+		// Rotate playerRenderer when a slope is detected
+		if (controller.collisions.isOnASlope
+			&& playerRenderer.transform.rotation.z == 0.0f) {
+
+			rendererRotation = Mathf.Round (controller.collisions.slopeAngle);
+
+			if (!controller.collisions.left)
+				playerRenderer.transform.Rotate (new Vector3 (0, 0, rendererRotation));
+			else if(controller.collisions.left)
+				playerRenderer.transform.Rotate (new Vector3 (0, 0, -rendererRotation));
+
+		} else if (!controller.collisions.isOnASlope
+			&& playerRenderer.transform.rotation.z != 0.0f) {
+
+			if(playerRenderer.transform.rotation.z > 0)
+				playerRenderer.transform.Rotate (new Vector3 (0, 0, -rendererRotation));
+			else
+				playerRenderer.transform.Rotate (new Vector3 (0, 0, rendererRotation));
+		}
+
 		if (directionalInput.x != 0) {
 			playerAnimator.SetBool ("IsMoving", true);
 			float newX = 0;
@@ -100,6 +123,7 @@ public class Player : MonoBehaviour {
 
 			UpdateVelocityYOnSuddenTopBottomCollision ();
 		}
+
 	}
 
 	void UpdateVelocityYOnSuddenTopBottomCollision (){
